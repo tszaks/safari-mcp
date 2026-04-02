@@ -185,6 +185,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         (optionalString(args.mode) as 'visible' | 'readability' | 'full_dom' | undefined) ?? 'readability',
         target,
       ));
+    case 'safari_snapshot_page':
+      return textResult(await pageTools.snapshotPage(target));
     case 'safari_get_page_html':
       return textResult(await pageTools.getPageHtml(target));
     case 'safari_get_selection':
@@ -236,6 +238,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         requireString(args.selector, 'selector'),
         optionalInt(args.timeout_ms, 'timeout_ms', 100, 60_000) ?? 5_000,
         optionalInt(args.interval_ms, 'interval_ms', 50, 5_000) ?? 250,
+        target,
+      ));
+    case 'safari_wait_for_navigation':
+      return textResult(await automationTools.waitForNavigation(
+        {
+          timeoutMs: optionalInt(args.timeout_ms, 'timeout_ms', 100, 60_000) ?? 5_000,
+          intervalMs: optionalInt(args.interval_ms, 'interval_ms', 50, 5_000) ?? 250,
+        },
+        target,
+      ));
+    case 'safari_wait_for_text':
+      return textResult(await automationTools.waitForText(
+        {
+          text: optionalString(args.text),
+          textGone: optionalString(args.textGone),
+          timeoutMs: optionalInt(args.timeout_ms, 'timeout_ms', 100, 60_000) ?? 5_000,
+          intervalMs: optionalInt(args.interval_ms, 'interval_ms', 50, 5_000) ?? 250,
+        },
         target,
       ));
     case 'safari_list_forms':

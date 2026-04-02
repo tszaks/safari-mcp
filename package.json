@@ -1,6 +1,6 @@
 {
   "name": "safari-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local macOS Safari MCP server with full browser control and page extraction",
   "type": "module",
   "main": "dist/index.js",

@@ -148,6 +148,17 @@ export const TOOL_DEFINITIONS: Tool[] = [
     },
   },
   {
+    name: 'safari_snapshot_page',
+    description: 'Return a Playwright-style structured snapshot of the current Safari page.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        window_index: { type: 'integer', minimum: 1 },
+        tab_index: { type: 'integer', minimum: 1 },
+      },
+    },
+  },
+  {
     name: 'safari_get_page_html',
     description: 'Return full page HTML from Safari.',
     inputSchema: {
@@ -315,6 +326,34 @@ export const TOOL_DEFINITIONS: Tool[] = [
         tab_index: { type: 'integer', minimum: 1 },
       },
       required: ['selector'],
+    },
+  },
+  {
+    name: 'safari_wait_for_navigation',
+    description: 'Wait for the current Safari page to navigate and finish loading.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        timeout_ms: { type: 'integer', minimum: 100, maximum: 60000 },
+        interval_ms: { type: 'integer', minimum: 50, maximum: 5000 },
+        window_index: { type: 'integer', minimum: 1 },
+        tab_index: { type: 'integer', minimum: 1 },
+      },
+    },
+  },
+  {
+    name: 'safari_wait_for_text',
+    description: 'Wait for text to appear or disappear in the current Safari page.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string' },
+        textGone: { type: 'string' },
+        timeout_ms: { type: 'integer', minimum: 100, maximum: 60000 },
+        interval_ms: { type: 'integer', minimum: 50, maximum: 5000 },
+        window_index: { type: 'integer', minimum: 1 },
+        tab_index: { type: 'integer', minimum: 1 },
+      },
     },
   },
   {

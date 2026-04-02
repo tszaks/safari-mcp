@@ -5,6 +5,9 @@ Local macOS Safari MCP server with:
 - Full page reads
 - Summary-ready extraction
 - DOM interaction helpers
+- Playwright-style page snapshots
+- Stronger waits for navigation and text changes
+- Safer click behavior with basic interactability checks
 
 ## Requirements
 
@@ -56,13 +59,18 @@ Example stdio entry:
 - `safari_open_url`
 - `safari_get_page_content`
 - `safari_get_page_markdown`
+- `safari_snapshot_page`
 - `safari_summarize_page`
 - `safari_query_elements`
 - `safari_click_element`
 - `safari_type_into_element`
 - `safari_wait_for_element`
+- `safari_wait_for_navigation`
+- `safari_wait_for_text`
 
 ## Notes
 
 - `safari_get_page_content` supports `visible`, `readability`, and `full_dom`.
+- `safari_snapshot_page` returns a structured page map with viewport info and actionable elements.
+- `safari_wait_for_navigation` and `safari_wait_for_text` make multi-step Safari flows more reliable.
 - Screenshot support now prefers Safari WebDriver and falls back to a Chrome-based DOM render when needed.

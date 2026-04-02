@@ -81,7 +81,20 @@ export class SafariBridge {
   }
 
   async openUrl(url: string, target: SafariTarget = {}) {
-    return this.execute<Record<string, unknown>>('open_url', { ...target, url });
+    await this.execute<Record<string, unknown>>('open_url', { ...target, url });
+    const normalizedTarget = url.endsWith('/') ? url : `${url}/`;
+    const timeoutAt = Date.now() + 10_000;
+
+    while (Date.now() < timeoutAt) {
+      const tab = await this.execute<Record<string, unknown>>('get_active_tab', {});
+      const currentUrl = String(tab.url || '');
+      if (currentUrl === url || currentUrl === normalizedTarget) {
+        return tab;
+      }
+      await delay(250);
+    }
+
+    return this.execute<Record<string, unknown>>('get_active_tab', {});
   }
 
   async newTab(url?: string, target: SafariTarget = {}) {

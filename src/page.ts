@@ -75,6 +75,78 @@ function pageContentScript(mode: ContentMode): string {
   `;
 }
 
+function pageSnapshotScript(): string {
+  return `
+    (() => {
+      const normalize = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+      const selectorHint = (element) => {
+        if (!element || !element.tagName) return '';
+        if (element.id) return '#' + element.id;
+        const role = element.getAttribute && element.getAttribute('role');
+        const ariaLabel = element.getAttribute && element.getAttribute('aria-label');
+        if (role && ariaLabel) {
+          return element.tagName.toLowerCase() + '[role="' + role + '"][aria-label="' + ariaLabel + '"]';
+        }
+        if (element.name) return element.tagName.toLowerCase() + '[name="' + element.name + '"]';
+        if (element.classList && element.classList.length) {
+          return element.tagName.toLowerCase() + '.' + Array.from(element.classList).slice(0, 2).join('.');
+        }
+        return element.tagName.toLowerCase();
+      };
+
+      const isVisible = (element) => {
+        if (!element || typeof element.getBoundingClientRect !== 'function') return false;
+        const rect = element.getBoundingClientRect();
+        const style = typeof window.getComputedStyle === 'function' ? window.getComputedStyle(element) : null;
+        return Boolean(
+          rect.width > 0 &&
+          rect.height > 0 &&
+          style &&
+          style.visibility !== 'hidden' &&
+          style.display !== 'none' &&
+          Number(style.opacity || '1') > 0.05
+        );
+      };
+
+      const actionable_elements = Array.from(document.querySelectorAll('a[href],button,input,select,textarea,[role="button"],[tabindex]'))
+        .filter((element) => isVisible(element))
+        .slice(0, 50)
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          return {
+            tag_name: (element.tagName || '').toLowerCase(),
+            role: element.getAttribute ? element.getAttribute('role') || '' : '',
+            text: normalize(element.innerText || element.textContent || element.value || ''),
+            selector_hint: selectorHint(element),
+            disabled: Boolean(element.disabled),
+            editable: Boolean('value' in element && !element.disabled && !element.readOnly),
+            rect: {
+              top: Math.round(rect.top || 0),
+              left: Math.round(rect.left || 0),
+              width: Math.round(rect.width || 0),
+              height: Math.round(rect.height || 0)
+            }
+          };
+        });
+
+      return JSON.stringify({
+        title: document.title || '',
+        url: location.href,
+        ready_state: document.readyState || 'unknown',
+        viewport: {
+          width: window.innerWidth || 0,
+          height: window.innerHeight || 0,
+          scroll_x: window.scrollX || 0,
+          scroll_y: window.scrollY || 0
+        },
+        forms: Array.from(document.forms).length,
+        actionable_elements,
+        text_preview: normalize(document.body ? (document.body.innerText || document.body.textContent || '') : '').slice(0, 2000)
+      });
+    })();
+  `;
+}
+
 export class SafariPageTools {
   constructor(private readonly bridge: SafariBridge) {}
 
@@ -192,5 +264,17 @@ export class SafariPageTools {
       summary_ready_markdown: toMarkdown(page.title, page.url, excerpt || page.content),
       content: page.content,
     };
+  }
+
+  async snapshotPage(target: SafariTarget = {}) {
+    return this.evaluate<{
+      title: string;
+      url: string;
+      ready_state: string;
+      viewport: Record<string, number>;
+      forms: number;
+      actionable_elements: Array<Record<string, unknown>>;
+      text_preview: string;
+    }>(pageSnapshotScript(), target);
   }
 }
