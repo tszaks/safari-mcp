@@ -101,6 +101,10 @@ export class SafariBridge {
     return this.execute<Record<string, unknown>>('new_tab', { ...target, url });
   }
 
+  async findTab(query: string) {
+    return this.execute<Array<Record<string, unknown>>>('find_tab', { query });
+  }
+
   async activateTab(target: SafariTarget) {
     return this.execute<Record<string, unknown>>('activate_tab', target);
   }
