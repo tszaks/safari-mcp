@@ -3,12 +3,23 @@ import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 export const TOOL_DEFINITIONS: Tool[] = [
   {
     name: 'safari_get_active_tab',
-    description: 'Get metadata for the active Safari tab.',
+    description: 'Get metadata (URL, title) for the currently active Safari tab. Call this FIRST before navigating anywhere — the user may already have the page open.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'safari_find_tab',
+    description: 'Search all open Safari tabs by URL or title substring. Returns matching tabs with window_index and tab_index so you can activate them. Use this before safari_open_url to avoid opening a duplicate tab or losing the user\'s existing session (e.g. their logged-in GitHub tab).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Case-insensitive substring to match against tab URL or title (e.g. "github.com", "Pull Requests")' },
+      },
+      required: ['query'],
+    },
+  },
+  {
     name: 'safari_list_tabs',
-    description: 'List Safari tabs across all windows or in one window.',
+    description: 'List all Safari tabs across all windows (includes private flag per window). Use this to discover what is already open before navigating.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -18,12 +29,12 @@ export const TOOL_DEFINITIONS: Tool[] = [
   },
   {
     name: 'safari_list_windows',
-    description: 'List Safari windows and their tabs.',
+    description: 'List Safari windows and their tabs. Each window includes a "private" flag — prefer non-private windows to access logged-in sessions.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
     name: 'safari_open_url',
-    description: 'Open a URL in the current Safari tab.',
+    description: 'Navigate the existing active Safari tab to a URL. Does NOT open a new window or tab — it reuses the current tab. Prefer this over safari_new_tab whenever you just need to visit a URL.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -35,7 +46,7 @@ export const TOOL_DEFINITIONS: Tool[] = [
   },
   {
     name: 'safari_new_tab',
-    description: 'Open a new Safari tab, optionally with a URL.',
+    description: 'Open a NEW Safari tab in the existing front window (never opens a new window, never opens private/incognito). Only use this when you specifically need a separate tab. For simple navigation, use safari_open_url instead.',
     inputSchema: {
       type: 'object',
       properties: {

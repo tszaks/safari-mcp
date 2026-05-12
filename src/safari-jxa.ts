@@ -95,11 +95,13 @@ function serializeTab(tab, windowIndex, tabPosition, currentTabIndex) {
 function serializeWindow(windowRef, windowIndex) {
   var tabs = ensureArray(safeCall(function () { return windowRef.tabs(); }, []));
   var currentTabIndex = safeCall(function () { return windowRef.currentTab().index(); }, 1);
+  var isPrivate = safeCall(function () { return windowRef.private(); }, false);
 
   return {
     window_id: 'window-' + (windowIndex + 1),
     window_index: windowIndex + 1,
     name: safeCall(function () { return windowRef.name(); }, ''),
+    private: isPrivate,
     tab_count: tabs.length,
     current_tab_index: currentTabIndex,
     tabs: tabs.map(function (tab, tabPosition) {
@@ -174,11 +176,15 @@ function listTabs(app, payload) {
 
 function ensureFrontWindow(app) {
   var windows = getWindows(app);
+
   if (windows.length) {
-    return {
-      windowRef: windows[0],
-      windowIndex: 0,
-    };
+    for (var i = 0; i < windows.length; i += 1) {
+      var isPrivate = safeCall(function () { return windows[i].private(); }, false);
+      if (!isPrivate) {
+        return { windowRef: windows[i], windowIndex: i };
+      }
+    }
+    return { windowRef: windows[0], windowIndex: 0 };
   }
 
   var appPathValue = appPath();
@@ -199,18 +205,19 @@ function openUrl(app, payload) {
 }
 
 function newTab(app, payload) {
-  var events = getSystemEvents();
   var url = typeof payload.url === 'string' && payload.url.trim() ? payload.url.trim() : '';
+  var windows = getWindows(app);
 
-  app.activate();
-  delay(0.2);
-  events.keystroke('t', { using: 'command down' });
-  delay(0.5);
-
-  if (url) {
-    requireTab(app, {}).tab.url = url;
-    delay(0.8);
+  if (!windows.length) {
+    ensureFrontWindow(app);
+    windows = getWindows(app);
   }
+
+  var frontWindow = windows[0];
+  var tab = app.Tab({ url: url || 'about:blank' });
+  frontWindow.tabs.push(tab);
+  frontWindow.currentTab = tab;
+  delay(0.5);
 
   return getActiveTab(app);
 }
@@ -314,6 +321,35 @@ function runJavaScript(app, payload) {
   };
 }
 
+function findTab(app, payload) {
+  var query = String(payload.query || '').trim().toLowerCase();
+  if (!query) {
+    throw new Error('Missing or invalid "query".');
+  }
+
+  var windows = getWindows(app);
+  var matches = [];
+
+  for (var wi = 0; wi < windows.length; wi += 1) {
+    var tabs = ensureArray(safeCall(function () { return windows[wi].tabs(); }, []));
+    var currentTabIndex = safeCall(function () { return windows[wi].currentTab().index(); }, 1);
+    var isPrivate = safeCall(function () { return windows[wi].private(); }, false);
+
+    for (var ti = 0; ti < tabs.length; ti += 1) {
+      var title = String(safeCall(function () { return tabs[ti].name(); }, '')).toLowerCase();
+      var url = String(safeCall(function () { return tabs[ti].url(); }, '')).toLowerCase();
+
+      if (title.indexOf(query) !== -1 || url.indexOf(query) !== -1) {
+        var serialized = serializeTab(tabs[ti], wi, ti, currentTabIndex);
+        serialized.window_private = isPrivate;
+        matches.push(serialized);
+      }
+    }
+  }
+
+  return matches;
+}
+
 function main() {
   var operation = getEnv('MCP_SAFARI_OPERATION');
   var payload = {};
@@ -369,6 +405,9 @@ function main() {
         break;
       case 'run_javascript':
         result = runJavaScript(app, payload);
+        break;
+      case 'find_tab':
+        result = findTab(app, payload);
         break;
       default:
         throw new Error('Unknown Safari operation: ' + operation);

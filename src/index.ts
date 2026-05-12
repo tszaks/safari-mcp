@@ -154,6 +154,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return textResult(await bridge.listTabs(target));
     case 'safari_list_windows':
       return textResult(await bridge.listWindows());
+    case 'safari_find_tab':
+      return textResult(await bridge.findTab(requireString(args.query, 'query')));
     case 'safari_open_url':
       return textResult(await bridge.openUrl(requireString(args.url, 'url'), target));
     case 'safari_new_tab':
