@@ -30,7 +30,7 @@ Create `package.json` with:
 
 **Step 2: Create TypeScript config**
 
-Create `tsconfig.json` that outputs to `dist/` and matches the style used by existing MCP servers in `/Users/tyler/Projects/MCP-Servers/`.
+Create `tsconfig.json` that outputs to `dist/` and matches the style used by existing MCP servers in `~/Projects/MCP-Servers/`.
 
 **Step 3: Create the entrypoint and tool registry shell**
 
