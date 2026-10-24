@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in safari-mcp does not work as it should
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Which tool did you call, with which arguments? Do not paste private page content.
+      placeholder: |
+        1. Call safari_open_url with ...
+        2. Call ...
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "26.5.1"
+    validations:
+      required: true
+  - type: input
+    id: safari
+    attributes:
+      label: Safari version
+      placeholder: "26.5"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: safari-mcp version
+      placeholder: "1.2.0"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      placeholder: "Claude Code, Codex, Claude Desktop"
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Error output or notes. Remove tokens, URLs with secrets and personal data first.
